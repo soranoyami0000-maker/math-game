@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Quest - Infinite Questions</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+        }
+        h1, h2 { text-align: center; color: var(--primary); }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #e0e7ff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: var(--primary-hover); }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .option-btn {
+            background-color: #f9fafb;
+            color: var(--text-color);
+            border: 1px solid #d1d5db;
+            text-align: left;
+            margin-bottom: 8px;
+            margin-top: 0;
+        }
+        .option-btn:hover { background-color: #e5e7eb; }
+        .hint-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .correct { background: #d1fae5; color: #065f46; }
+        .incorrect { background: #fee2e2; color: #991b1b; }
+        .hidden { display: none !important; }
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9fafb;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        .shop-item button { width: auto; margin: 0; padding: 6px 12px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- LAYAR UTAMA -->
+    <div id="screen-menu">
+        <h1>🎮 Math Quest Infinite</h1>
+        <div class="status-bar">
+            <span id="player-info">Pemain: Tamu</span>
+            <span id="coin-info">💰 0 Koin</span>
+        </div>
+        <p style="text-align: center;" id="outfit-info">👕 Outfit: Baju Standar</p>
+        <button onclick="goToGameConfig()">Mulai Bermain (Ribuan Soal)</button>
+        <button onclick="goToShop()" style="background-color: #059669;">Toko Karakter (Shop)</button>
+    </div>
+
+    <!-- LAYAR PILIH MODE & LEVEL -->
+    <div id="screen-config" class="hidden">
+        <h2>Pilih Tantangan</h2>
+        <label>Mode Permainan:</label>
+        <select id="select-mode">
+            <option value="pg">Pilihan Ganda</option>
+            <option value="essay">Essay (Isian)</option>
+        </select>
+
+        <label>Tingkat Kesulitan:</label>
+        <select id="select-level">
+            <option value="mudah">Mudah (Aritmatika Dasar)</option>
+            <option value="sedang">Sedang (Aljabar & Persentase + Rumus)</option>
+            <option value="sulit">Sulit (Kecepatan, Akar, & Pecahan + Rumus)</option>
+            <option value="ekstrim">Ekstrim (Fungsi, Faktorial, & Penalaran + Rumus)</option>
+        </select>
+
+        <button onclick="startQuestion()">Mulai Soal Baru</button>
+        <button onclick="goToMenu()" style="background-color: #6b7280;">Kembali</button>
+    </div>
+
+    <!-- LAYAR PERTANYAAN -->
+    <div id="screen-game" class="hidden">
+        <div class="status-bar">
+            <span id="game-lvl-badge">Level: Mudah</span>
+            <span id="game-coin-badge">Hadiah: 10 Koin</span>
+        </div>
+        <h3 id="question-text">Pertanyaan...</h3>
+        
+        <div id="hint-container" class="hidden"></div>
+
+        <div id="pg-options"></div>
+        
+        <div id="essay-container" class="hidden">
+            <input type="text" id="essay-input" placeholder="Ketik jawaban angka/teks...">
+            <button onclick="checkEssayAnswer()">Jawab</button>
+        </div>
+
+        <div id="feedback-box" class="feedback hidden"></div>
+        <button id="next-btn" class="hidden" onclick="startQuestion()">Soal Berikutnya ➡️</button>
+        <button onclick="goToMenu()" style="background-color: #6b7280; margin-top: 20px;">Keluar ke Menu</button>
+    </div>
+
+    <!-- LAYAR TOKO -->
+    <div id="screen-shop" class="hidden">
+        <h2>🛍️ Toko Karakter</h2>
+        <div class="status-bar">
+            <span>Koin Anda:</span>
+            <span id="shop-coins">0 Koin</span>
+        </div>
+        <div id="shop-list"></div>
+        <button onclick="goToMenu()" style="background-color: #6b7280; margin-top: 20px;">Kembali</button>
+    </div>
+</div>
+
+<script>
+    let player = {
+        name: "Pemain",
+        coins: 0,
+        outfit: "Baju Standar 👕",
+        inventory: ["Baju Standar 👕"]
+    };
+
+    const shopItems = {
+        "Jaket Keren 🧥": 50,
+        "Topi Sihir 🧙‍♂️": 100,
+        "Jas Formal 🤵": 200,
+        "Kostum Superhero 🦸‍♂️": 350
+    };
+
+    let currentQuestion = null;
+
+    function updateUI() {
+        document.getElementById("player-info").innerText = `Pemain: ${player.name}`;
+        document.getElementById("coin-info").innerText = `💰 ${player.coins} Koin`;
+        document.getElementById("outfit-info").innerText = `👕 Outfit: ${player.outfit}`;
+        document.getElementById("shop-coins").innerText = `${player.coins} Koin`;
+    }
+
+    function switchScreen(screenId) {
+        document.getElementById("screen-menu").classList.add("hidden");
+        document.getElementById("screen-config").classList.add("hidden");
+        document.getElementById("screen-game").classList.add("hidden");
+        document.getElementById("screen-shop").classList.add("hidden");
+        document.getElementById(screenId).classList.remove("hidden");
+        updateUI();
+    }
+
+    function goToMenu() { switchScreen("screen-menu"); }
+    function goToGameConfig() { switchScreen("screen-config"); }
+    function goToShop() { renderShop(); switchScreen("screen-shop"); }
+
+    // --- GENERATOR SOAL MATEMATIKA OTOMATIS (RIBUAN KOMBINASI) ---
+    function generateMathQuestion(level) {
+        let qData = {};
+        
+        if (level === "mudah") {
+            let ops = ['+', '-', '*'];
+            let op = ops[Math.floor(Math.random() * ops.length)];
+            let a = Math.floor(Math.random() * 50) + 5;
+            let b = Math.floor(Math.random() * 50) + 1;
+            if (op === '-' && a < b) { let temp = a; a = b; b = temp; } // Cegah minus
+            if (op === '*') { a = Math.floor(Math.random() * 12) + 2; b = Math.floor(Math.random() * 12) + 2; }
+            
+            let ans = eval(`${a} ${op === '*' ? '*' : op} ${b}`);
+            qData.q = `Berapa hasil dari ${a} ${op === '*' ? 'x' : op} ${b}?`;
+            qData.ans = ans.toString();
+            qData.hint = "Lakukan operasi hitung dasar dengan teliti.";
+            qData.exp = `Hasil perhitungan dari ${a} ${op === '*' ? 'x' : op} ${b} adalah ${ans}.`;
+            qData.coin = 10;
+        } 
+        else if (level === "sedang") {
+            let type = Math.random() > 0.5 ? 'aljabar' : 'persen';
+            if (type === 'aljabar') {
+                let x = Math.floor(Math.random() * 10) + 2;
+                let c = Math.floor(Math.random() * 10) + 1;
+                let result = 3 * x + c;
+                qData.q = `Jika 3x + ${c} = ${result}, berapakah nilai x?`;
+                qData.ans = x.toString();
+                qData.hint = "Pindahkan konstanta ke ruas kanan, lalu bagi dengan koefisien x.";
+                qData.exp = `3x = ${result} - ${c} -> 3x = ${result - c} -> x = ${x}.`;
+            } else {
+                let pct = [10, 15, 20, 25, 50][Math.floor(Math.random() * 5)];
+                let base = [100, 200, 300, 400, 500][Math.floor(Math.random() * 5)];
+                let ans = (pct / 100) * base;
+                qData.q = `Berapa ${pct}% dari ${base}?`;
+                qData.ans = ans.toString();
+                qData.hint = "Ubah persen menjadi pecahan per 100, lalu kalikan dengan angka dasar.";
+                qData.exp = `${pct}/100 x ${base} = ${ans}.`;
+            }
+            qData.coin = 20;
+        } 
+        else if (level === "sulit") {
+            let type = Math.random() > 0.5 ? 'kecepatan' : 'akar';
+            if (type === 'kecepatan') {
+                let v = Math.floor(Math.random() * 5) * 10 + 40; // 40, 50, 60, 70, 80
+                let t = Math.floor(Math.random() * 3) + 2; // 2, 3, 4 jam
+                let s = v * t;
+                qData.q = `Sebuah kendaraan melaju dengan kecepatan rata-rata ${v} km/jam selama ${t} jam. Berapa jarak yang ditempuh?`;
+                qData.ans = s.toString();
+                qData.hint = "Rumus Jarak = Kecepatan x Waktu.";
+                qData.exp = `Jarak = ${v} km/jam x ${t} jam = ${s} km.`;
+            } else {
+                let rootNum = [16, 25, 36, 49, 64, 81, 100, 144, 196, 225][Math.floor(Math.random() * 10)];
+                let ans = Math.sqrt(rootNum);
+                qData.q = `Berapa akar kuadrat dari ${rootNum}?`;
+                qData.ans = ans.toString();
+                qData.hint = "Cari angka yang jika dikalikan dengan dirinya sendiri menghasilkan angka tersebut.";
+                qData.exp = `${ans} x ${ans} = ${rootNum}.`;
+            }
+            qData.coin = 35;
+        } 
+        else if (level === "ekstrim") {
+            let type = Math.random() > 0.5 ? 'fungsi' : 'rata_rata';
+            if (type === 'fungsi') {
+                let a = Math.floor(Math.random() * 3) + 2;
+                let x = Math.floor(Math.random() * 4) + 2;
+                let ans = a * (x * x) - 5;
+                qData.q = `Jika f(x) = ${a}x² - 5, berapakah nilai dari f(${x})?`;
+                qData.ans = ans.toString();
+                qData.hint = "Substitusikan nilai x ke dalam persamaan fungsi kuadrat.";
+                qData.exp = `f(${x}) = ${a}(${x * x}) - 5 = ${a * (x * x)} - 5 = ${ans}.`;
+            } else {
+                let n1 = 10, n2 = 15, n3 = 20;
+                let avg = 18;
+                let x = (avg * 4) - (n1 + n2 + n3);
+                qData.q = `Jika rata-rata dari angka ${n1}, ${n2}, ${n3}, dan x adalah ${avg}, berapakah nilai x?`;
+                qData.ans = x.toString();
+                qData.hint = "Jumlahkan seluruh data lalu bagi dengan jumlah total data (4).";
+                qData.exp = `Total = ${avg} x 4 = ${avg * 4}. Total 3 angka awal = ${n1+n2+n3}. Maka x = ${avg*4} - ${n1+n2+n3} = ${x}.`;
+            }
+            qData.coin = 50;
+        }
+
+        return qData;
+    }
+
+    function startQuestion() {
+        const mode = document.getElementById("select-mode").value;
+        const level = document.getElementById("select-level").value;
+
+        currentQuestion = generateMathQuestion(level);
+
+        document.getElementById("game-lvl-badge").innerText = `Level: ${level.toUpperCase()}`;
+        document.getElementById("game-coin-badge").innerText = `Hadiah: ${currentQuestion.coin} Koin`;
+        document.getElementById("question-text").innerText = currentQuestion.q;
+
+        const feedbackBox = document.getElementById("feedback-box");
+        feedbackBox.className = "feedback hidden";
+        feedbackBox.innerHTML = "";
+        document.getElementById("next-btn").classList.add("hidden");
+
+        const hintContainer = document.getElementById("hint-container");
+        if (level !== "mudah") {
+            hintContainer.innerHTML = `💡 <strong>Rumus/Petunjuk:</strong> ${currentQuestion.hint}`;
+            hintContainer.classList.remove("hidden");
+        } else {
+            hintContainer.classList.add("hidden");
+        }
+
+        const pgContainer = document.getElementById("pg-options");
+        const essayContainer = document.getElementById("essay-container");
+
+        pgContainer.innerHTML = "";
+        if (mode === "pg") {
+            pgContainer.classList.remove("hidden");
+            essayContainer.classList.add("hidden");
+
+            // Buat pilihan ganda otomatis (1 benar, 3 acak mendekati)
+            let correctAnsNum = parseFloat(currentQuestion.ans);
+            let optionsSet = new Set([currentQuestion.ans]);
+            
+            while(optionsSet.size < 4) {
+                let offset = Math.floor(Math.random() * 10) - 5;
+                if (offset === 0) offset = 1;
+                let fakeAns = (correctAnsNum + offset).toString();
+                optionsSet.add(fakeAns);
+            }
+
+            let optArray = Array.from(optionsSet).sort(() => Math.random() - 0.5);
+            let labels = ['A', 'B', 'C', 'D'];
+
+            optArray.forEach((optVal, index) => {
+                let btn = document.createElement("button");
+                btn.className = "option-btn";
+                let optLabel = labels[index];
+                btn.innerText = `${optLabel}. ${optVal}`;
+                
+                // Cek apakah opsi ini adalah jawaban benar
+                let isCorrect = (optVal === currentQuestion.ans);
+                btn.onclick = () => checkAnswer(isCorrect);
+                pgContainer.appendChild(btn);
+            });
+        } else {
+            pgContainer.classList.add("hidden");
+            essayContainer.classList.remove("hidden");
+            document.getElementById("essay-input").value = "";
+        }
+
+        switchScreen("screen-game");
+    }
+
+    function checkAnswer(isCorrect) {
+        const feedbackBox = document.getElementById("feedback-box");
+        if (isCorrect) {
+            feedbackBox.className = "feedback correct";
+            feedbackBox.innerHTML = `🎉 BENAR! Anda mendapatkan +${currentQuestion.coin} Koin!`;
+            player.coins += currentQuestion.coin;
+        } else {
+            feedbackBox.className = "feedback incorrect";
+            feedbackBox.innerHTML = `❌ SALAH!<br><br><strong>Penyelesaian:</strong><br>${currentQuestion.exp}`;
+        }
+        feedbackBox.classList.remove("hidden");
+        document.getElementById("next-btn").classList.remove("hidden");
+        updateUI();
+    }
+
+    function checkEssayAnswer() {
+        const userAns = document.getElementById("essay-input").value.trim();
+        const isCorrect = (userAns.toLowerCase() === currentQuestion.ans.toLowerCase());
+        checkAnswer(isCorrect);
+    }
+
+    function renderShop() {
+        const shopList = document.getElementById("shop-list");
+        shopList.innerHTML = "";
+
+        for (let [item, price] of Object.entries(shopItems)) {
+            let itemDiv = document.createElement("div");
+            itemDiv.className = "shop-item";
+
+            let isOwned = player.inventory.includes(item);
+            let isActive = player.outfit === item;
+
+            let statusText = isOwned ? (isActive ? "✅ (Dipakai)" : "📦 (Dimiliki)") : `💰 ${price} Koin`;
+            let btnActionText = isOwned ? (isActive ? "Dipakai" : "Pakai") : "Beli";
+
+            itemDiv.innerHTML = `
+                <span>${item} <br><small>${statusText}</small></span>
+                <button onclick="buyOrEquip('${item}', ${price})">${btnActionText}</button>
+            `;
+            shopList.appendChild(itemDiv);
+        }
+    }
+
+    function buyOrEquip(item, price) {
+        if (player.inventory.includes(item)) {
+            player.outfit = item;
+            alert(`Berhasil memakai ${item}!`);
+        } else {
+            if (player.coins >= price) {
+                player.coins -= price;
+                player.inventory.push(item);
+                player.outfit = item;
+                alert(`Selamat! Anda membeli dan langsung memakai ${item}!`);
+            } else {
+                alert("Koin Anda tidak cukup!");
+            }
+        }
+        renderShop();
+        updateUI();
+    }
+
+    window.onload = function() {
+        let username = prompt("Masukkan nama Anda:", "Siswa Hebat");
+        if (username) player.name = username;
+        updateUI();
+    };
+</script>
+
+</body>
+</html>
